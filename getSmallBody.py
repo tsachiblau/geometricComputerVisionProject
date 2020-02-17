@@ -1,7 +1,4 @@
 import numpy as np
-import mpl_toolkits.mplot3d as a3
-import matplotlib.colors as colors
-import matplotlib.pyplot as plt
 from isMember import isMember
 from removeIndexFromVector import removeIndexFromVector
 

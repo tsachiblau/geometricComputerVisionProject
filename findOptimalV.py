@@ -1,15 +1,11 @@
-import numpy as np
-import mpl_toolkits.mplot3d as a3
-import matplotlib.colors as colors
-import matplotlib.pyplot as plt
 import scipy
 import tensorflow as tf
-
 
 @tf.function
 def f(t_sigma_x, t_v, t_eigen_values_y, tau):
 
-    t_tanh = tf.math.tanh(t_v)
+    t_v_positive = tf.math.maximum(t_v, 0)
+    t_tanh = tf.math.tanh(t_v_positive)
     t_tanh_add = tf.add(t_v, 1)
     t_tanh_normalize = tf.multiply(t_v, tau)
 
@@ -55,9 +51,10 @@ def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau,
 
     var_list = [t_v]
     # Optimize for a fixed number of steps
-    for _ in range(num_of_iter):
+    for i in range(num_of_iter):
         opt.minimize(loss_fn, var_list)
-        print(t_v)
 
+
+    t_v = tf.math.maximum(t_v, 0)
     v = tf.keras.backend.eval(t_v)
     return v
