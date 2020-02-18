@@ -97,15 +97,18 @@ def showPolygons(ax, vertex, polygons, face_color):
         vtx = [l1, l2, l3]
 
         tri = a3.art3d.Poly3DCollection([vtx])
-        #tri.set_edgecolor('k')
+
         try:
             if np.shape(face_color)[0] <= 3:
                 color_val = face_color
             else:
                 tmp_val = ((face_color[idx_p1] + face_color[idx_p2] + face_color[idx_p3]) / 3 ) - min_face_color
                 one_color_val = np.float( tmp_val / normalize_face_color )
-                color_val = [one_color_val, one_color_val, one_color_val]
+                color_val = plt.cm.hot( np.clip(one_color_val, one_color_val, one_color_val) )
+
             tri.set_facecolor(color_val)
+
+
         except:
             print("There is a problem is showData funciton!")
 
