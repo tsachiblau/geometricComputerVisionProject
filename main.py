@@ -22,13 +22,9 @@ file_path2 = file_path + '.tri'
 #fit for idx of vertex
 polygons = polygons - 1
 
-#show data
-# showData(ver, polygons)
-
 #get part of the body
-
-num_of_polygons_in_small_model = 600
-seed = 2
+num_of_polygons_in_small_model = 1000
+seed = 5
 small_body_path = './small_body_data_' + str(num_of_polygons_in_small_model) + '_seed_' + str(seed)
 
 if not path.exists(small_body_path + '.npy'):
@@ -36,10 +32,6 @@ if not path.exists(small_body_path + '.npy'):
     np.save(small_body_path, small_body_polygons)
 else:
     small_body_polygons = np.load(small_body_path + '.npy')
-
-
-#show data
-# showData(ver, small_body_polygons)
 
 #clac laplacian
 number_of_eigen_values_y = 20
