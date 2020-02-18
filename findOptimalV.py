@@ -53,9 +53,10 @@ def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau,
     # Optimize for a fixed number of steps
     for i in range(num_of_iter):
         print('iter: ' + str(i) + '/' + str(num_of_iter))
-        print(t_v)
-        opt.minimize(loss_fn, var_list)
-
+        try:
+            opt.minimize(loss_fn, var_list)
+        except:
+            print('there is an error in the optimization')
 
     t_v = tf.math.maximum(t_v, 0)
     v = tf.keras.backend.eval(t_v)

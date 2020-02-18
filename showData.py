@@ -41,6 +41,31 @@ def showData(vertex, all_body_polygons, small_body_polygons, selected_vertices, 
     plt.show()
 
 
+
+def showEigenValues(vertex, all_body_polygons, color):
+
+    x = vertex[:, 0]
+    y = vertex[:, 1]
+    z = vertex[:, 2]
+
+    #normalize
+    global_min = min(np.min(x), np.min(y), np.min(z))
+    global_max = max(np.max(x), np.max(y), np.max(z))
+
+    # create plot
+    ax = a3.Axes3D(plt.figure())
+    ax.set_xlim([global_min, global_max])
+    ax.set_ylim([global_min, global_max])
+    ax.set_zlim([global_min, global_max])
+    ax.grid(None)
+    ax.axis('off')
+
+    #show all body
+    showPolygons(ax, vertex, all_body_polygons, color)
+    plt.show()
+
+
+
 def showPolygons(ax, vertex, polygons, face_color):
 
 
@@ -51,6 +76,13 @@ def showPolygons(ax, vertex, polygons, face_color):
     #normalize
     global_min = min(np.min(x), np.min(y), np.min(z))
     global_max = max(np.max(x), np.max(y), np.max(z))
+
+    #color normalization
+    if np.shape(face_color)[0] > 3:
+        min_face_color = np.min(face_color)
+        normalize_face_color = np.max(face_color) - min_face_color
+
+
 
     #draw all polygons
     for i in range(np.shape(polygons)[0]):
@@ -71,8 +103,8 @@ def showPolygons(ax, vertex, polygons, face_color):
                 color_val = face_color
             else:
                 tmp_val = ((face_color[idx_p1] + face_color[idx_p2] + face_color[idx_p3]) / 3 ) - min_face_color
-                color_val = np.float( tmp_val / normalize_face_color )
-
+                one_color_val = np.float( tmp_val / normalize_face_color )
+                color_val = [one_color_val, one_color_val, one_color_val]
             tri.set_facecolor(color_val)
         except:
             print("There is a problem is showData funciton!")
