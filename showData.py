@@ -33,11 +33,12 @@ def showData(vertex, all_body_polygons, small_body_polygons, selected_vertices, 
     if small_body_polygons is not None:
         showPolygons(ax, vertex, small_body_polygons,  np.array([0, 1, 0]))
 
+    th_of_vertex = 0
     for v_i in range(np.shape(selected_vertices)[0]):
-        if selected_vertices[v_i] > 1:
+        if selected_vertices[v_i] > th_of_vertex:
             ax.scatter(x[v_i], y[v_i], z[v_i], c = np.array([1, 0, 0]))
-    i_num_of_points = np.sum( np.array(selected_vertices) > 0)
-    ax.set_title('num of iter ' + str(num_of_iter) + 'num of points: ' + str(i_num_of_points))
+    i_num_of_points = np.sum( np.array(selected_vertices) > th_of_vertex)
+    ax.set_title('num of iter ' + str(num_of_iter) + '    num of points: ' + str(i_num_of_points))
     plt.show()
 
 

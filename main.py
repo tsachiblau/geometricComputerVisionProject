@@ -7,9 +7,8 @@ from mindboggle.shapes.laplace_beltrami import computeAB
 from mindboggle.shapes.laplace_beltrami import fem_laplacian
 from findOptimalV import findOptimalV
 from showData import showEigenValues
-
-
-
+from scipy.sparse.linalg import inv
+from scipy import sparse
 
 #load data
 file_path = './dataset/dog0'
@@ -40,16 +39,18 @@ ver_laplace_y, polygons_laplace_y = prepreForLaplacian(ver, small_body_polygons)
 
 eigen_values_x, eigen_vectors_x = fem_laplacian(ver_laplace_x, polygons_laplace_x, spectrum_size = number_of_eigen_values_y)
 eigen_values_y, eigen_vectors_y = fem_laplacian(ver_laplace_y, polygons_laplace_y, spectrum_size = number_of_eigen_values_y)
-laplacianA, laplacianB = computeAB(ver_laplace_x, polygons_laplace_x)
+A, B = computeAB(ver_laplace_x, polygons_laplace_x)
+B_inv = inv(B)
+laplacian = sparse.csr_matrix.multiply(B_inv, A)
 
-# #show eigenvalue
+#show eigenvalue
 # first_func = np.sum(eigen_vectors_x[:, 10:11], 1)
 # res_func = first_func
 # showEigenValues(ver, polygons, res_func)
 
 
-initial_v = np.ones( np.shape(ver_laplace_x)[0] ) * 0
-num_of_iter = 100
+initial_v = np.ones( np.shape(ver_laplace_x)[0] )
+num_of_iter = 1000
 tau = (10 * eigen_values_y[-1]) / 2
-v = findOptimalV(laplacianA, eigen_values_x, initial_v, eigen_values_y, eigen_vectors_x, tau, num_of_iter)
+v = findOptimalV(laplacian, eigen_values_x, initial_v, eigen_values_y, eigen_vectors_x, tau, num_of_iter)
 showData(ver, all_body_polygons = polygons, small_body_polygons = small_body_polygons, selected_vertices = v, num_of_iter = num_of_iter)

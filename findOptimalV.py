@@ -4,10 +4,9 @@ import tensorflow as tf
 @tf.function
 def f(t_sigma_x, t_v, t_eigen_values_y, tau):
 
-    t_v_positive = tf.math.maximum(t_v, 0)
-    t_tanh = tf.math.tanh(t_v_positive)
-    t_tanh_add = tf.add(t_v, 1)
-    t_tanh_normalize = tf.multiply(t_v, tau)
+    t_tanh = tf.math.tanh(t_v)
+    t_tanh_add = tf.add(t_tanh, 1)
+    t_tanh_normalize = tf.multiply(t_tanh_add, tau)
 
     #diag v
     t_diag_v = tf.linalg.tensor_diag( t_tanh_normalize )
@@ -23,7 +22,7 @@ def f(t_sigma_x, t_v, t_eigen_values_y, tau):
     t_cut_eigen_values = t_eigenvalues[0 : num_of_eigenvalues ]
 
 
-    t_eigen_values_y_inv = tf.divide( tf.ones(num_of_eigenvalues, dtype=tf.dtypes.float64), t_eigen_values_y )
+    t_eigen_values_y_inv = tf.divide( tf.ones(num_of_eigenvalues, dtype=tf.dtypes.float64), t_eigen_values_y )##################################
 
     t_sub = tf.subtract(t_cut_eigen_values, t_eigen_values_y, )
     t_normalize = tf.math.multiply(t_sub, tf.cast(t_eigen_values_y_inv, tf.float64) )
@@ -37,8 +36,6 @@ def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau,
     #arrange sigma_x
     if isinstance( sigma_x, scipy.sparse.csr.csr_matrix ):
         sigma_x = sigma_x.todense()
-
-    # Input data
 
     # Setup a stochastic gradient descent optimizer
     opt = tf.keras.optimizers.SGD(learning_rate= 1e-4)
@@ -57,7 +54,7 @@ def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau,
             opt.minimize(loss_fn, var_list)
         except:
             print('there is an error in the optimization')
+            break
 
-    t_v = tf.math.maximum(t_v, 0)
     v = tf.keras.backend.eval(t_v)
     return v
