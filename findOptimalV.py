@@ -1,5 +1,7 @@
 import scipy
 import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
 
 @tf.function
 def f(t_sigma_x, t_v, t_eigen_values_y, tau):
@@ -47,11 +49,22 @@ def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau,
     loss_fn = lambda: f(t_sigma_x, t_v, t_eigen_values_y, tau)
 
     var_list = [t_v]
+    loss_error = []
+    plt.figure()
+    plt.show(block = False)
+
     # Optimize for a fixed number of steps
     for i in range(num_of_iter):
         print('iter: ' + str(i) + '/' + str(num_of_iter))
         try:
             opt.minimize(loss_fn, var_list)
+            loss_error.append(loss_fn())
+            if np.mod(i, 10) == 0:
+                plt.plot(np.array(range(np.shape(loss_error)[0])), loss_error)
+                plt.draw()
+                plt.pause(0.001)
+
+
         except:
             print('there is an error in the optimization')
             break
