@@ -9,6 +9,9 @@ from findOptimalV import findOptimalV
 from showData import showEigenValues
 from scipy.sparse.linalg import inv
 from scipy import sparse
+import os.path
+from os import path
+
 
 #load data
 file_path = './dataset/dog0'
@@ -24,10 +27,16 @@ polygons = polygons - 1
 
 #get part of the body
 
-num_of_polygons_in_small_model = 300
+num_of_polygons_in_small_model = 600
+seed = 2
+small_body_path = './small_body_data_' + str(num_of_polygons_in_small_model) + '_seed_' + str(seed)
 
-seed = 10
-small_body_polygons = getSmallBody(polygons, num_of_polygons_in_small_model, seed)
+if not path.exists(small_body_path + '.npy'):
+    small_body_polygons = getSmallBody(polygons, num_of_polygons_in_small_model, seed)
+    np.save(small_body_path, small_body_polygons)
+else:
+    small_body_polygons = np.load(small_body_path + '.npy')
+
 
 #show data
 # showData(ver, small_body_polygons)
@@ -48,9 +57,8 @@ laplacian = sparse.csr_matrix.multiply(B_inv, A)
 # res_func = first_func
 # showEigenValues(ver, polygons, res_func)
 
-
-initial_v = np.ones( np.shape(ver_laplace_x)[0] )
-num_of_iter = 1000
-tau = (10 * eigen_values_y[-1]) / 2
-v = findOptimalV(laplacian, eigen_values_x, initial_v, eigen_values_y, eigen_vectors_x, tau, num_of_iter)
+tau = (10 * eigen_values_y[-1])
+initial_v = np.ones( np.shape(ver_laplace_x)[0] ) * (tau / 4)
+num_of_iter = 100
+v = findOptimalV(laplacian, eigen_values_x, initial_v, eigen_values_y, eigen_vectors_x, tau / 2, num_of_iter)
 showData(ver, all_body_polygons = polygons, small_body_polygons = small_body_polygons, selected_vertices = v, num_of_iter = num_of_iter)
