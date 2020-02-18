@@ -41,7 +41,7 @@ def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau,
     # Input data
 
     # Setup a stochastic gradient descent optimizer
-    opt = tf.keras.optimizers.SGD(learning_rate=0.01)
+    opt = tf.keras.optimizers.SGD(learning_rate= 1e-4)
     # Define loss function and variables to optimize
     t_v = tf.Variable(v)
     t_sigma_x = tf.Variable(sigma_x)
@@ -52,6 +52,8 @@ def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau,
     var_list = [t_v]
     # Optimize for a fixed number of steps
     for i in range(num_of_iter):
+        print('iter: ' + str(i) + '/' + str(num_of_iter))
+        print(t_v)
         opt.minimize(loss_fn, var_list)
 
 
