@@ -50,7 +50,7 @@ laplacian = sparse.csr_matrix.multiply(B_inv, A)
 # showEigenValues(ver, polygons, res_func)
 
 tau = (10 * eigen_values_y[-1])
-initial_v = np.ones( np.shape(ver_laplace_x)[0] ) * (tau / 4)
-num_of_iter = 100
+initial_v = np.ones( np.shape(ver_laplace_x)[0] ) * 1
+num_of_iter = 1000
 v = findOptimalV(laplacian, eigen_values_x, initial_v, eigen_values_y, eigen_vectors_x, tau / 2, num_of_iter)
 showData(ver, all_body_polygons = polygons, small_body_polygons = small_body_polygons, selected_vertices = v, num_of_iter = num_of_iter)

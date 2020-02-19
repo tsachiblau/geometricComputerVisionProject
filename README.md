@@ -9,6 +9,7 @@ TRY
 	2. check the tesorflow optimization
 	4. set teh boundery acording to the article
 	5. add error visualization
+	6. a way to choose better step(dependes on the size of eigenvalues)
 	
 PROBLEMS:
 	1. eigenvalues are too big

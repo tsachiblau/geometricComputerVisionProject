@@ -43,6 +43,7 @@ def showData(vertex, all_body_polygons, small_body_polygons, selected_vertices, 
 
 
 
+
 def showEigenValues(vertex, all_body_polygons, color):
 
     x = vertex[:, 0]

@@ -33,6 +33,10 @@ def f(t_sigma_x, t_v, t_eigen_values_y, tau):
     return t_norm
 
 
+
+
+
+
 def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau, num_of_iter = 2):
 
     #arrange sigma_x
@@ -40,7 +44,9 @@ def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau,
         sigma_x = sigma_x.todense()
 
     # Setup a stochastic gradient descent optimizer
-    opt = tf.keras.optimizers.SGD(learning_rate= 1e-4)
+    opt = tf.keras.optimizers.SGD(learning_rate= 1e-6)
+    # opt = tf.keras.optimizers.Adadelta(learning_rate= 1e-4, rho = 0.999)
+
     # Define loss function and variables to optimize
     t_v = tf.Variable(v)
     t_sigma_x = tf.Variable(sigma_x)
@@ -60,10 +66,16 @@ def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau,
             opt.minimize(loss_fn, var_list)
             loss_error.append(loss_fn())
             if np.mod(i, 10) == 0:
+                plt.clf()
+                plt.subplot(2, 1, 1)
                 plt.plot(np.array(range(np.shape(loss_error)[0])), loss_error)
+                plt.subplot(2, 1, 2)
+                tmpx = np.array( range(t_v.shape[0]) )
+                tmpy = np.array( tf.keras.backend.eval(t_v) )
+                plt.scatter( tmpx, tmpy, facecolors = 'b')
+                plt.title('num of vertices' + str(np.sum( tmpy > 0 )))
                 plt.draw()
                 plt.pause(0.001)
-
 
         except:
             print('there is an error in the optimization')
