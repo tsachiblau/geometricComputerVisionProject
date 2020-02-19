@@ -3,8 +3,8 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 
-@tf.function
-def f(t_sigma_x, t_v, t_eigen_values_y, tau):
+
+def loss(t_sigma_x, t_v, t_eigen_values_y, tau):
 
     t_tanh = tf.math.tanh(t_v)
     t_tanh_add = tf.add(t_tanh, 1)
@@ -34,6 +34,18 @@ def f(t_sigma_x, t_v, t_eigen_values_y, tau):
 
 
 
+def step(t_sigma_x, t_v, t_eigen_values_y, tau, lr = 1e-4):
+    with tf.GradientTape() as tape:
+        v_loss = loss(t_sigma_x, t_v, t_eigen_values_y, tau)
+
+    t_v_gradient = tape.gradient(v_loss, t_v)
+
+    # Update variables
+    t_v.assign_sub(t_v_gradient * lr)
+
+    return v_loss, t_v_gradient
+
+
 
 
 
@@ -48,34 +60,41 @@ def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau,
     # opt = tf.keras.optimizers.Adadelta(learning_rate= 1e-4, rho = 0.999)
 
     # Define loss function and variables to optimize
-    t_v = tf.Variable(v)
+    t_v = tf.Variable(v, trainable = True)
     t_sigma_x = tf.Variable(sigma_x)
     t_eigen_values_y = tf.Variable(eigen_value_y)
 
-    loss_fn = lambda: f(t_sigma_x, t_v, t_eigen_values_y, tau)
-
-    var_list = [t_v]
     loss_error = []
     plt.figure()
     plt.show(block = False)
+
+    lr = 1e-5
 
     # Optimize for a fixed number of steps
     for i in range(num_of_iter):
         print('iter: ' + str(i) + '/' + str(num_of_iter))
         try:
-            opt.minimize(loss_fn, var_list)
-            loss_error.append(loss_fn())
+            # opt.minimize(loss_fn, var_list)
+
+            ms_error, t_v_gradient = step(t_sigma_x, t_v, t_eigen_values_y, tau, lr = lr)
+            loss_error.append(ms_error)
+
             if np.mod(i, 10) == 0:
                 plt.clf()
-                plt.subplot(2, 1, 1)
+                plt.subplot(3, 1, 1)
                 plt.plot(np.array(range(np.shape(loss_error)[0])), loss_error)
-                plt.subplot(2, 1, 2)
+                plt.subplot(3, 1, 2)
                 tmpx = np.array( range(t_v.shape[0]) )
                 tmpy = np.array( tf.keras.backend.eval(t_v) )
                 plt.scatter( tmpx, tmpy, facecolors = 'b')
                 plt.title('num of vertices' + str(np.sum( tmpy > 0 )))
+                plt.subplot(3, 1, 3)
+                tmpx = np.array( range(t_v_gradient.shape[0]) )
+                tmpy = np.array( tf.keras.backend.eval(t_v_gradient) )
+                plt.scatter( tmpx, tmpy, facecolors = 'b')
                 plt.draw()
                 plt.pause(0.001)
+                print('    current error is: ' + str(ms_error))
 
         except:
             print('there is an error in the optimization')

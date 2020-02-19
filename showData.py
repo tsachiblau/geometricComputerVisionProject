@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 
 
-def showData(vertex, all_body_polygons, small_body_polygons, selected_vertices, num_of_iter):
+def showData(vertex, all_body_polygons, small_body_polygons, selected_vertices, num_of_iter = None):
 
     x = vertex[:, 0]
     y = vertex[:, 1]
@@ -38,13 +38,15 @@ def showData(vertex, all_body_polygons, small_body_polygons, selected_vertices, 
         if selected_vertices[v_i] > th_of_vertex:
             ax.scatter(x[v_i], y[v_i], z[v_i], c = np.array([1, 0, 0]))
     i_num_of_points = np.sum( np.array(selected_vertices) > th_of_vertex)
-    ax.set_title('num of iter ' + str(num_of_iter) + '    num of points: ' + str(i_num_of_points))
-    plt.show()
+    if num_of_iter is not None:
+        ax.set_title('num of iter ' + str(num_of_iter) + '    num of points: ' + str(i_num_of_points))
+
+    plt.show(block = False)
 
 
 
 
-def showEigenValues(vertex, all_body_polygons, color):
+def showEigenValues(vertex, all_body_polygons, eigen_functions, eigen_values):
 
     x = vertex[:, 0]
     y = vertex[:, 1]
@@ -53,18 +55,19 @@ def showEigenValues(vertex, all_body_polygons, color):
     #normalize
     global_min = min(np.min(x), np.min(y), np.min(z))
     global_max = max(np.max(x), np.max(y), np.max(z))
-
-    # create plot
-    ax = a3.Axes3D(plt.figure())
-    ax.set_xlim([global_min, global_max])
-    ax.set_ylim([global_min, global_max])
-    ax.set_zlim([global_min, global_max])
-    ax.grid(None)
-    ax.axis('off')
-
-    #show all body
-    showPolygons(ax, vertex, all_body_polygons, color)
-    plt.show()
+    for i in range(20):
+        # create plot
+        ax = a3.Axes3D(plt.figure())
+        ax.set_xlim([global_min, global_max])
+        ax.set_ylim([global_min, global_max])
+        ax.set_zlim([global_min, global_max])
+        ax.grid(None)
+        ax.axis('off')
+        ax.set_title('eigenvalue number ' + str(i+1) +' value: ' + str(eigen_values[i]))
+        #show all body
+        showPolygons(ax, vertex, all_body_polygons, eigen_functions[:, i])
+        a = ax.get_images()
+        plt.show(a)
 
 
 
