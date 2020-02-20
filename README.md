@@ -16,3 +16,8 @@ PROBLEMS:
 	2. the v vector is getting huge
 	3. work on laplace beltrami
 	4. better way to choose part of the dog(a unique part of the dog)
+
+
+TODO list:
+	1. put on grid
+	2. show a few eigen funtions 

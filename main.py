@@ -1,67 +1,58 @@
 import numpy as np
-from dataLoader import dataLoader
+from dataLoader import loadData
 from showData import showData
-from getSmallBody import getSmallBody
-from prepreForLaplacian import prepreForLaplacian
 from mindboggle.shapes.laplace_beltrami import computeAB
 from mindboggle.shapes.laplace_beltrami import fem_laplacian
 from findOptimalV import findOptimalV
+from scipy.sparse.linalg import eigsh
 from showData import showEigenValues
-from scipy.sparse.linalg import inv
-from scipy import sparse
-import os.path
-from os import path
 import matplotlib.pyplot as plt
 
-#load data
+
+#########################################################################################################
+############################################### load data ###############################################
+#########################################################################################################
+
 file_path = './dataset/dog0'
-file_path1 = file_path + '.vert'
-file_path2 = file_path + '.tri'
-[ver, polygons] = dataLoader(file_path1, file_path2)
+polygons, small_body_polygons, ver,\
+sparse_laplacian_X_W, sparse_laplacian_X_A,\
+sparse_laplacian_Y_W, sparse_laplacian_Y_A, sparse_laplacian_Y_A_inv = loadData(file_path)
 
-#fit for idx of vertex
-polygons = polygons - 1
+#########################################################################################################
+############################################# get laplacian #############################################
+#########################################################################################################
+number_of_eigen_values_y = 10
+eigenvalues_X, eigenvectors_X = eigsh(sparse_laplacian_X_W, k = number_of_eigen_values_y, M=sparse_laplacian_X_A, sigma=-0.01)
+eigenvalues_Y, eigenvectors_Y = eigsh(sparse_laplacian_Y_A_inv.dot(sparse_laplacian_Y_W), k = number_of_eigen_values_y, sigma=-0.01)
 
-#get part of the body
-num_of_polygons_in_small_model = 1000
-seed = 5
-small_body_path = './small_body_data_' + str(num_of_polygons_in_small_model) + '_seed_' + str(seed)
+initial_v = np.ones( np.shape(eigenvectors_X)[0] ) * 1
+num_of_iter = 10000
 
-if not path.exists(small_body_path + '.npy'):
-    small_body_polygons = getSmallBody(polygons, num_of_polygons_in_small_model, seed)
-    np.save(small_body_path, small_body_polygons)
-else:
-    small_body_polygons = np.load(small_body_path + '.npy')
+#########################################################################################################
+################################################ visualization ##########################################
+#########################################################################################################
+# #show the part
+# showData(ver, all_body_polygons = polygons, small_body_polygons = small_body_polygons, selected_vertices = initial_v[:] * 0)
+#
+# #show eigenvalue
+# showEigenValues(ver, polygons, eigenvectors_X, eigenvalues_X)
 
-#clac laplacian
-number_of_eigen_values_y = 20
-ver_laplace_x, polygons_laplace_x = prepreForLaplacian(ver, polygons)
-ver_laplace_y, polygons_laplace_y = prepreForLaplacian(ver, small_body_polygons)
-
-eigen_values_x, eigen_vectors_x = fem_laplacian(ver_laplace_x, polygons_laplace_x, spectrum_size = number_of_eigen_values_y)
-eigen_values_y, eigen_vectors_y = fem_laplacian(ver_laplace_y, polygons_laplace_y, spectrum_size = number_of_eigen_values_y)
-A, B = computeAB(ver_laplace_x, polygons_laplace_x)
-B_inv = inv(B)
-laplacian = sparse.csr_matrix.multiply(B_inv, A)
-
-initial_v = np.ones( np.shape(ver_laplace_x)[0] ) * 1
-num_of_iter = 1000
+# #show eigenvalue graph
+plt.figure()
+plt.plot(np.array(range(np.shape(eigenvalues_X)[0])), eigenvalues_X)
+plt.plot(np.array(range(np.shape(eigenvalues_Y)[0])), eigenvalues_Y)
+plt.legend(['all shape', 'part shape'])
+plt.show(block = False)
 
 
+#########################################################################################################
+################################################### calc V ##############################################
+#########################################################################################################
+tau = (10 * eigenvectors_Y[number_of_eigen_values_y - 1])
+initial_v = np.ones( np.shape(ver)[0] ) * 1
+v = findOptimalV(sparse_laplacian_X_W, sparse_laplacian_X_A, initial_v, eigenvectors_Y, tau / 2, num_of_iter)
 
-
-################################################ visualization ################################################
-#show the part
-showData(ver, all_body_polygons = polygons, small_body_polygons = small_body_polygons, selected_vertices = initial_v[:] * 0)
-
-# show eigenvalue
-showEigenValues(ver, polygons, eigen_vectors_x, eigen_values_x)
-################################################ visualization ################################################
-
-
-
-
-# tau = (10 * eigen_values_y[-1])
-# initial_v = np.ones( np.shape(ver_laplace_x)[0] ) * 1
-# v = findOptimalV(laplacian, eigen_values_x, initial_v, eigen_values_y, eigen_vectors_x, tau / 2, num_of_iter)
-# showData(ver, all_body_polygons = polygons, small_body_polygons = small_body_polygons, selected_vertices = v, num_of_iter = num_of_iter)
+#########################################################################################################
+################################################# show res ##############################################
+#########################################################################################################
+showData(ver, all_body_polygons = polygons, small_body_polygons = small_body_polygons, selected_vertices = v, num_of_iter = num_of_iter)

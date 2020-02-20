@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def loss(t_sigma_x, t_v, t_eigen_values_y, tau):
+def loss(sparse_laplacian_X_W, t_sparse_laplacian_X_A_half, t_v, t_eigen_values_y, tau):
 
     t_tanh = tf.math.tanh(t_v)
     t_tanh_add = tf.add(t_tanh, 1)
@@ -13,8 +13,11 @@ def loss(t_sigma_x, t_v, t_eigen_values_y, tau):
     #diag v
     t_diag_v = tf.linalg.tensor_diag( t_tanh_normalize )
 
+    t_hemiltonian_1 = tf.linalg.matmul(t_sparse_laplacian_X_A_half, sparse_laplacian_X_W)
+    t_hemiltonian_2 = tf.linalg.matmul(t_hemiltonian_1, t_sparse_laplacian_X_A_half)
+
     #add v to cov
-    t_sum = tf.add(t_sigma_x, t_diag_v)
+    t_sum = tf.add(t_hemiltonian_2, t_diag_v)
 
     #get eignevalues
     t_eigenvalues = tf.linalg.eigvalsh( t_sum )
@@ -34,9 +37,9 @@ def loss(t_sigma_x, t_v, t_eigen_values_y, tau):
 
 
 
-def step(t_sigma_x, t_v, t_eigen_values_y, tau, lr = 1e-4):
+def step(t_sparse_laplacian_X_W, t_sparse_laplacian_X_A_half, t_v, t_eigen_values_y, tau, lr = 1e-4):
     with tf.GradientTape() as tape:
-        v_loss = loss(t_sigma_x, t_v, t_eigen_values_y, tau)
+        v_loss = loss(t_sparse_laplacian_X_W, t_sparse_laplacian_X_A_half, t_v, t_eigen_values_y, tau)
 
     t_v_gradient = tape.gradient(v_loss, t_v)
 
@@ -49,11 +52,14 @@ def step(t_sigma_x, t_v, t_eigen_values_y, tau, lr = 1e-4):
 
 
 
-def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau, num_of_iter = 2):
+def findOptimalV(sparse_laplacian_X_W, sparse_laplacian_X_A, v, eigen_value_y, tau, num_of_iter = 2):
 
     #arrange sigma_x
-    if isinstance( sigma_x, scipy.sparse.csr.csr_matrix ):
-        sigma_x = sigma_x.todense()
+    if isinstance( sparse_laplacian_X_W, scipy.sparse.csr.csr_matrix ):
+        sparse_laplacian_X_W = sparse_laplacian_X_W.todense()
+
+    if isinstance( sparse_laplacian_X_A, scipy.sparse.csr.csr_matrix ):
+        sparse_laplacian_X_A = sparse_laplacian_X_A.todense()
 
     # Setup a stochastic gradient descent optimizer
     opt = tf.keras.optimizers.SGD(learning_rate= 1e-6)
@@ -61,7 +67,9 @@ def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau,
 
     # Define loss function and variables to optimize
     t_v = tf.Variable(v, trainable = True)
-    t_sigma_x = tf.Variable(sigma_x)
+    t_sparse_laplacian_X_W = tf.Variable(sparse_laplacian_X_W)
+    t_sparse_laplacian_X_A = tf.Variable(sparse_laplacian_X_A)
+
     t_eigen_values_y = tf.Variable(eigen_value_y)
 
     loss_error = []
@@ -76,7 +84,7 @@ def findOptimalV(sigma_x, eigen_value_x, v, eigen_value_y, eigen_vectors_x, tau,
         try:
             # opt.minimize(loss_fn, var_list)
 
-            ms_error, t_v_gradient = step(t_sigma_x, t_v, t_eigen_values_y, tau, lr = lr)
+            ms_error, t_v_gradient = step(t_sparse_laplacian_X_W, t_sparse_laplacian_X_A_half, t_v, t_eigen_values_y, tau, lr = lr)
             loss_error.append(ms_error)
 
             if np.mod(i, 10) == 0:

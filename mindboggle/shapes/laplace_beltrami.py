@@ -468,6 +468,7 @@ def fem_laplacian(points, faces, spectrum_size=10, normalization="areaindex",
     """
     from scipy.sparse.linalg import eigsh, lobpcg
     import numpy as np
+    from scipy.sparse.linalg import inv
 
     from mindboggle.shapes.laplace_beltrami import computeAB
 
@@ -475,6 +476,8 @@ def fem_laplacian(points, faces, spectrum_size=10, normalization="areaindex",
     # Compute A and B matrices (from Reuter et al., 2009):
     # ----------------------------------------------------------------
     A, B = computeAB(points, faces)
+    B_inv = inv(B)
+
     if A.shape[0] <= spectrum_size:
         if verbose:
             print("The 3D shape has too few vertices ({0} <= {1}). Skip.".
