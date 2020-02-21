@@ -1,7 +1,7 @@
 close all;
 clc; clear;
-%% load data
 addpath('laplacian\');
+%% load data
 file_path = './dataset/dog0';
 X = load_off(file_path);
 [laplace_X.W, ~, laplace_X.A] = calc_LB_FEM_bc(X, 'dirichlet');
