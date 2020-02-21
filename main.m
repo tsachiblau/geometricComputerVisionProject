@@ -20,7 +20,7 @@ patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceColor', 'green');
 title('show patch');
 %% show eignevectors
 
-number_of_eig = 20;
+number_of_eig = 100;
 [laplace_X.eigenvectors, laplace_X.eigenvalue] = eigs(laplace_X.W, laplace_X.A, number_of_eig, 'SM');
 [laplace_Y.eigenvectors, laplace_Y.eigenvalue] = eigs(laplace_Y.W, laplace_Y.A, number_of_eig, 'SM');
 %% show eigenvalue on complete shape
@@ -57,16 +57,18 @@ legend('X', 'Y');
 
 %% optimization 
 eigenvalue_error = 2;
-draw_th = 0;
+draw_th = 1e-3;
 eigenvalue_error_th = 1e-3;
 tau = 10 * laplace_Y.eigenvalue(end);
-v = ones(size(X.VERT, 1), 1) * (tau / 4);
+v = ones(size(X.VERT, 1), 1) * tau * 2;
+% v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
 alpha = 1e-4;
 mu = diag(laplace_Y.eigenvalue);
 iter = 1;
 error_list = [];
 
 f = figure();
+
 while eigenvalue_error > eigenvalue_error_th
     ex1 = sparse(laplace_X.W + laplace_X.A * diag(v));
     [eigenvectors, eigenvalue] = eigs(ex1 , laplace_X.A, number_of_eig, 'SM');
@@ -87,7 +89,7 @@ while eigenvalue_error > eigenvalue_error_th
         scatter(1:size(v, 1), v);
         
         idx_to_draw = v < draw_th;
-        subplot(2, 2, [2, 4]);
+        subplot(2, 2, 2);
 
         patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
         hold on;
@@ -95,6 +97,11 @@ while eigenvalue_error > eigenvalue_error_th
         hold on;
         scatter3(X.VERT(idx_to_draw,1), X.VERT(idx_to_draw,2), X.VERT(idx_to_draw,3), 'r', 'filled');
         title('show patch');
+        subplot(2, 2, 4);
+        plot( 1 : size(diag(eigenvalue), 1), diag(eigenvalue), 'r');
+        hold on;
+        plot( 1 : size(laplace_Y.eigenvalue, 2), diag(laplace_Y.eigenvalue), 'b');
+        legend('X', 'Y');
         pause(0.001);
     end
     
