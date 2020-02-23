@@ -6,9 +6,12 @@ file_path = './dataset/dog0';
 X = load_off(file_path);
 [laplace_X.W, ~, laplace_X.A] = calc_LB_FEM_bc(X, 'dirichlet');
 
+
 %% cut part of the shape
-num_of_polygons = 500;
-seed = 5;
+
+
+num_of_polygons = 1000;
+seed = 503;
 Y = getPartialShape(X, num_of_polygons, seed);
 [laplace_Y.W, ~, laplace_Y.A] = calc_LB_FEM_bc(Y, 'dirichlet');
 
@@ -29,7 +32,7 @@ i = 1;
 for row = 1 : 2
     for col = 1 : 10
         subplot(2, 10, i);
-        patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceVertexCData',laplace_X.eigenvectors(:,i),'FaceColor','flat');
+        patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceVertexCData',laplace_X.eigenvectors(:,i),'EdgeAlpha', 0, 'FaceColor', 'interp');
         title(['eigenvalue number', num2str(i) ,'   is', num2str(laplace_X.eigenvalue(i, i))]);
         i = i + 1;
     end 
@@ -41,7 +44,7 @@ i = 1;
 for row = 1 : 2
     for col = 1 : 10
         subplot(2, 10, i);
-        patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceVertexCData',laplace_Y.eigenvectors(:,i),'FaceColor','flat');
+        patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceVertexCData',laplace_Y.eigenvectors(:,i),'EdgeAlpha', 0, 'FaceColor', 'interp');
         title(['eigenvalue number', num2str(i) ,'   is', num2str(laplace_Y.eigenvalue(i, i))]);
         i = i + 1;
     end 
@@ -60,8 +63,8 @@ eigenvalue_error = 2;
 draw_th = 1e-3;
 eigenvalue_error_th = 1e-3;
 tau = 10 * laplace_Y.eigenvalue(end);
-v = ones(size(X.VERT, 1), 1) * tau * 2;
-v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
+v = ones(size(X.VERT, 1), 1) * tau * 100;
+% v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
 alpha = 1e-4;
 mu = diag(laplace_Y.eigenvalue);
 iter = 1;
@@ -75,12 +78,15 @@ while eigenvalue_error > eigenvalue_error_th
     ex2 = eigenvectors .* eigenvectors;
     ex3 = (diag(eigenvalue) - mu) ./ (mu .^ 2);
     ex4 = 2 * alpha * ex2 * ex3;
-    v = v - max(ex4, 0);
+    
+    %gradient of the smooth part
+    ex5 = getVectorSmoother(v, X, alpha);
+    v = v - max(ex4, 0) -  ex5;
     
     eigenvalue_error = norm(diag(eigenvalue) - mu);
     error_list = [error_list, eigenvalue_error];
     
-    if mod(iter, 10) == 0
+    if mod(iter, 100) == 0
         clf(f);
         subplot(2, 2, 1);
         plot(1:size(error_list, 2), error_list);

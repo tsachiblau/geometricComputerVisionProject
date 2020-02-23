@@ -25,9 +25,30 @@ function [Y] = getPartialShape(X, num_of_polygons, seed_num)
     remaining_polygon_list = remaining_polygon_list(~ismember(remaining_polygon_list, taken_polygon_list));
 
     
+    %remove polygons that have vertices that he is share with only one
+    %polygon
+    relevant_polygons = X.TRIV(taken_polygon_list, :);
+    all_vertices = sort(unique(relevant_polygons));
+    
+    remove_polygons = [];
+    remove_points = [];
+    
+    for i = 1:size(all_vertices, 1)
+        tmp_sum = sum(sum(X.TRIV(taken_polygon_list, :) == all_vertices(i)));
+        if tmp_sum == 1
+            tmp_idx = find(sum(X.TRIV(taken_polygon_list, :) == all_vertices(i), 2));
+            remove_polygons = [remove_polygons, tmp_idx];
+            remove_points = [remove_points, all_vertices(i)];
+        end
+    end
+    
+    taken_polygon_list = taken_polygon_list(~ismember(1:size(taken_polygon_list, 2), remove_polygons));
+    vertics_list = vertics_list(~ismember(vertics_list, remove_points));
+    
     tmp = X.TRIV(taken_polygon_list, :);
     new_TRIV = [];
     idx_of_vertex_in_original_array = sort(unique(vertics_list));
+    
     for i = 1 : size(taken_polygon_list, 2)
         new_row = [];
         for j = 1 : 3
