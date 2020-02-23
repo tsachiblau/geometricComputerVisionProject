@@ -20,7 +20,7 @@ patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceColor', 'green');
 title('show patch');
 %% show eignevectors
 
-number_of_eig = 100;
+number_of_eig = 20;
 [laplace_X.eigenvectors, laplace_X.eigenvalue] = eigs(laplace_X.W, laplace_X.A, number_of_eig, 'SM');
 [laplace_Y.eigenvectors, laplace_Y.eigenvalue] = eigs(laplace_Y.W, laplace_Y.A, number_of_eig, 'SM');
 %% show eigenvalue on complete shape
