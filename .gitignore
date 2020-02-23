@@ -3,4 +3,5 @@
 *.xml
 *.iml
 *.npy
+~$*
 __init__.py
