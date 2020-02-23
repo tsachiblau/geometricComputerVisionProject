@@ -61,7 +61,7 @@ draw_th = 1e-3;
 eigenvalue_error_th = 1e-3;
 tau = 10 * laplace_Y.eigenvalue(end);
 v = ones(size(X.VERT, 1), 1) * tau * 2;
-% v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
+v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
 alpha = 1e-4;
 mu = diag(laplace_Y.eigenvalue);
 iter = 1;
@@ -80,7 +80,7 @@ while eigenvalue_error > eigenvalue_error_th
     eigenvalue_error = norm(diag(eigenvalue) - mu);
     error_list = [error_list, eigenvalue_error];
     
-    if mod(iter, 100) == 0
+    if mod(iter, 10) == 0
         clf(f);
         subplot(2, 2, 1);
         plot(1:size(error_list, 2), error_list);

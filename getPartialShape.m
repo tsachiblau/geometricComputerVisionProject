@@ -16,6 +16,15 @@ function [Y] = getPartialShape(X, num_of_polygons, seed_num)
         remaining_polygon_list = remaining_polygon_list(~ismember(remaining_polygon_list, taken_polygon_list));
     end
     
+    relevant_polygons = sum( ismember(X.TRIV(remaining_polygon_list, :), vertics_list), 2);
+    [B, I] = sort(relevant_polygons, 'descend');
+    neighbors = B >= 3;
+    taken_polygon_list = [taken_polygon_list, remaining_polygon_list(I(neighbors))];
+    vertex_to_add = X.TRIV( remaining_polygon_list(I(neighbors)), :);
+    vertics_list = cat(1, vertics_list, vertex_to_add(:));
+    remaining_polygon_list = remaining_polygon_list(~ismember(remaining_polygon_list, taken_polygon_list));
+
+    
     tmp = X.TRIV(taken_polygon_list, :);
     new_TRIV = [];
     idx_of_vertex_in_original_array = sort(unique(vertics_list));
