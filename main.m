@@ -33,8 +33,8 @@ number_of_eig = 20;
 [LBO_X.eigenvectors, LBO_X.eigenvalue] = eigs(LBO_X.W, LBO_X.Q, number_of_eig, 'SM');
 [LBO_Y.eigenvectors, LBO_Y.eigenvalue] = eigs(LBO_Y.W, LBO_Y.Q, number_of_eig, 'SM');
 
-%% look at the features
-
+% %% look at the features
+% 
 % L = inv(laplace_X.A) * laplace_X.W;
 % features = L * laplace_X.eigenvectors;
 % features(isnan(features)) = 0;
@@ -62,7 +62,8 @@ number_of_eig = 20;
 % 
 % y = zeros(3400, 1);
 % y(Y.ORIGINAL_TRIV(:)) = 1;
-
+% XXX = [features, y];
+% XXX_e = [features, features2, y];
 
 %% show eigenvalue on complete shape
 figure();
@@ -103,12 +104,13 @@ eigenvalue_error_th = 1e-3;
 tau = 10 * laplace_Y.eigenvalue(end);
 v = ones(size(X.VERT, 1), 1) * tau * 100;
 % v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
-alpha = 1e-4;
+alpha = 1e-3;
 mu = diag(laplace_Y.eigenvalue);
 mu_LBO = diag(LBO_Y.eigenvalue);
 
 iter = 1;
 error_list = [];
+error_list_LBO = [];
 
 f = figure();
 
@@ -119,22 +121,28 @@ while eigenvalue_error > eigenvalue_error_th
     [v_update_LBO, eigenvalue_LBO] = updateV(v, LBO_X.W, LBO_X.Q, mu_LBO, number_of_eig, alpha);
 
     v = v - v_update - v_update_LBO;
-    
     eigenvalue_error = norm(diag(eigenvalue) - mu);
+    eigenvalue_error_LBO = norm(diag(eigenvalue_LBO) - mu_LBO);
+
     error_list = [error_list, eigenvalue_error];
+    error_list_LBO = [error_list_LBO, eigenvalue_error_LBO];
+
     
     if mod(iter, 100) == 0
         clf(f);
         
         subplot(2, 3, 1);
         plot(1:size(error_list, 2), error_list);
-        title('eigenvalue norm error');
+        title('eigenvalue norm error LB');
+        
+        subplot(2, 3, 2);
+        plot(1:size(error_list_LBO, 2), error_list_LBO);
+        title('eigenvalue norm error LBO');
         
         subplot(2, 3, 3);
         scatter(1:size(v, 1), v);
         idx_to_draw = v < draw_th;
-        
-        subplot(2, 3, 2);
+        subplot(2, 3, 4);
         patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
         hold on;
         patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceColor', 'green');
@@ -142,17 +150,19 @@ while eigenvalue_error > eigenvalue_error_th
         scatter3(X.VERT(idx_to_draw,1), X.VERT(idx_to_draw,2), X.VERT(idx_to_draw,3), 'r', 'filled');
         title(['show patch    num of points: ', num2str(sum(idx_to_draw)), '/', num2str(Y.n)]);
         
-        subplot(2, 3, 4);
+        subplot(2, 3, 5);
         plot( 1 : size(diag(eigenvalue), 1), diag(eigenvalue), 'r');
         hold on;
         plot( 1 : size(laplace_Y.eigenvalue, 2), diag(laplace_Y.eigenvalue), 'b');
         legend('X', 'Y');
+        title('eigenvalue of LB');
         
-        subplot(2, 3, 5);
+        subplot(2, 3, 6);
         plot( 1 : size(diag(eigenvalue_LBO), 1), diag(eigenvalue_LBO), 'r');
         hold on;
         plot( 1 : size(LBO_Y.eigenvalue, 2), diag(LBO_Y.eigenvalue), 'b');
         legend('X', 'Y');
+        title('eigenvalue of LBO');
         pause(0.001);
 
     end

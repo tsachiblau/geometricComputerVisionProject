@@ -4,8 +4,21 @@ if bc ~= "neumann" && bc ~= "dirichlet"
     disp("options for bc are dirichlet, neumann");
 end
 
+% %creat M
+% M.m = 4;
+% M.n = 5;
+% M.indexes = 1:5;
+% M.TRIV = [  [1 2 5];
+%             [2 3 5];
+%             [3 4 5];
+%             [1 5 4]];
+% M.VERT = [  [0 0 0];
+%             [1 0 0];
+%             [1 1 0];
+%             [0 1 0];
+%             [0.5 0.5 sqrt(0.5)]];
 
-%build Q
+
 angles = zeros(M.m,3);
 for i=1:3
     a = mod(i-1,3)+1;
@@ -17,7 +30,7 @@ for i=1:3
     ab = ab ./ (sqrt(sum(ab.^2,2))*[1 1 1]);
     ac = ac ./ (sqrt(sum(ac.^2,2))*[1 1 1]);
     % normalize the vectors
-    % compute cotan of angles
+    %for every polygons we have the angle of the vertex i at column i
     angles(:,a) = acos(sum(ab.*ac,2));
 end
 
@@ -25,7 +38,7 @@ indicesI = [M.TRIV(:,1);M.TRIV(:,2);M.TRIV(:,3);M.TRIV(:,3);M.TRIV(:,2);M.TRIV(:
 indicesJ = [M.TRIV(:,2);M.TRIV(:,3);M.TRIV(:,1);M.TRIV(:,2);M.TRIV(:,1);M.TRIV(:,3)];
 values   = [angles(:,1);angles(:,2);angles(:,3);angles(:,3);angles(:,2);angles(:,1)];
 Q = sparse(indicesI, indicesJ, values, M.n, M.n);
-Q = sparse(1:M.n,1:M.n,abs(2*pi - sum(Q)));
+Q = sparse(1:M.n,1:M.n,abs(2*pi - sum(Q, 2)));
 
 
 
