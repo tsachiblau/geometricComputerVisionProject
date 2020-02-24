@@ -33,6 +33,37 @@ number_of_eig = 20;
 [LBO_X.eigenvectors, LBO_X.eigenvalue] = eigs(LBO_X.W, LBO_X.Q, number_of_eig, 'SM');
 [LBO_Y.eigenvectors, LBO_Y.eigenvalue] = eigs(LBO_Y.W, LBO_Y.Q, number_of_eig, 'SM');
 
+%% look at the features
+
+% L = inv(laplace_X.A) * laplace_X.W;
+% features = L * laplace_X.eigenvectors;
+% features(isnan(features)) = 0;
+% 
+% L2 = inv(LBO_X.A) * LBO_X.W;
+% features2 = L2 * LBO_X.eigenvectors;
+% features2(isnan(features2)) = 0;
+% 
+% feature_reduction = tsne(features);
+% feature_reduction_full = tsne([features, features2]);
+% 
+% figure();
+% subplot(1,2,1);
+% scatter(feature_reduction(:, 1), feature_reduction(:, 2));
+% hold on;
+% scatter(feature_reduction(Y.ORIGINAL_TRIV(:), 1), feature_reduction(Y.ORIGINAL_TRIV(:), 2), 'r');
+% title('first laplacian');
+% 
+% subplot(1,2,2);
+% scatter(feature_reduction_full(:, 1), feature_reduction_full(:, 2));
+% hold on;
+% scatter(feature_reduction_full(Y.ORIGINAL_TRIV(:), 1), feature_reduction_full(Y.ORIGINAL_TRIV(:), 2), 'r');
+% title('two laplacians');
+% 
+% 
+% y = zeros(3400, 1);
+% y(Y.ORIGINAL_TRIV(:)) = 1;
+
+
 %% show eigenvalue on complete shape
 figure();
 i = 1;
