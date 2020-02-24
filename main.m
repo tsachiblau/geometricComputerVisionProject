@@ -28,6 +28,11 @@ title('show patch');
 number_of_eig = 20;
 [laplace_X.eigenvectors, laplace_X.eigenvalue] = eigs(laplace_X.W, laplace_X.A, number_of_eig, 'SM');
 [laplace_Y.eigenvectors, laplace_Y.eigenvalue] = eigs(laplace_Y.W, laplace_Y.A, number_of_eig, 'SM');
+
+%clac LBO
+[LBO_X.eigenvectors, LBO_X.eigenvalue] = eigs(LBO_X.W, LBO_X.Q, number_of_eig, 'SM');
+[LBO_Y.eigenvectors, LBO_Y.eigenvalue] = eigs(LBO_Y.W, LBO_Y.Q, number_of_eig, 'SM');
+
 %% show eigenvalue on complete shape
 figure();
 i = 1;
@@ -77,8 +82,10 @@ f = figure();
 while eigenvalue_error > eigenvalue_error_th
    
     %gradient of the smooth part
-    [v_update, eigenvalue] = updateV(v, laplace_X, mu, number_of_eig, alpha);
-    v = v - v_update;
+    [v_update, eigenvalue] = updateV(v, laplace_X.W, laplace_X.A, mu, number_of_eig, alpha);
+    [v_update_LBO, eigenvalue_LBO] = updateV(v, LBO_X.W, LBO_X.Q, mu, number_of_eig, alpha);
+
+    v = v - v_update - v_update_LBO;
     
     eigenvalue_error = norm(diag(eigenvalue) - mu);
     error_list = [error_list, eigenvalue_error];
@@ -99,7 +106,7 @@ while eigenvalue_error > eigenvalue_error_th
         patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceColor', 'green');
         hold on;
         scatter3(X.VERT(idx_to_draw,1), X.VERT(idx_to_draw,2), X.VERT(idx_to_draw,3), 'r', 'filled');
-        title('show patch');
+        title('show patch    num of points: ' + num2str(sum(idx_to_draw)) + '/' + num2str(Y.n));
         subplot(2, 2, 4);
         plot( 1 : size(diag(eigenvalue), 1), diag(eigenvalue), 'r');
         hold on;
