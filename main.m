@@ -5,6 +5,7 @@ addpath('laplacian\');
 file_path = './dataset/dog0';
 X = load_off(file_path);
 [laplace_X.W, ~, laplace_X.A] = calc_LB_FEM_bc(X, 'dirichlet');
+[LBO_X.W, ~, LBO_X.A, LBO_X.Q] = calc_LBO_FEM_bc(X, 'dirichlet');
 
 
 %% cut part of the shape
@@ -14,6 +15,7 @@ num_of_polygons = 1000;
 seed = 503;
 Y = getPartialShape(X, num_of_polygons, seed);
 [laplace_Y.W, ~, laplace_Y.A] = calc_LB_FEM_bc(Y, 'dirichlet');
+[LBO_Y.W, ~, LBO_Y.A, LBO_Y.Q] = calc_LBO_FEM_bc(Y, 'dirichlet');
 
 %% show obj
 figure();
@@ -81,7 +83,7 @@ while eigenvalue_error > eigenvalue_error_th
     eigenvalue_error = norm(diag(eigenvalue) - mu);
     error_list = [error_list, eigenvalue_error];
     
-    if mod(iter, 2) == 0
+    if mod(iter, 100) == 0
         clf(f);
         subplot(2, 2, 1);
         plot(1:size(error_list, 2), error_list);
