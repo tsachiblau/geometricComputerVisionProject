@@ -71,9 +71,11 @@ draw_th = 1e-3;
 eigenvalue_error_th = 1e-3;
 tau = 10 * laplace_Y.eigenvalue(end);
 v = ones(size(X.VERT, 1), 1) * tau * 100;
-v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
+% v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
 alpha = 1e-4;
 mu = diag(laplace_Y.eigenvalue);
+mu_LBO = diag(LBO_Y.eigenvalue);
+
 iter = 1;
 error_list = [];
 
@@ -83,7 +85,7 @@ while eigenvalue_error > eigenvalue_error_th
    
     %gradient of the smooth part
     [v_update, eigenvalue] = updateV(v, laplace_X.W, laplace_X.A, mu, number_of_eig, alpha);
-    [v_update_LBO, eigenvalue_LBO] = updateV(v, LBO_X.W, LBO_X.Q, mu, number_of_eig, alpha);
+    [v_update_LBO, eigenvalue_LBO] = updateV(v, LBO_X.W, LBO_X.Q, mu_LBO, number_of_eig, alpha);
 
     v = v - v_update - v_update_LBO;
     
@@ -92,27 +94,36 @@ while eigenvalue_error > eigenvalue_error_th
     
     if mod(iter, 100) == 0
         clf(f);
-        subplot(2, 2, 1);
+        
+        subplot(2, 3, 1);
         plot(1:size(error_list, 2), error_list);
         title('eigenvalue norm error');
-        subplot(2, 2, 3);
-        scatter(1:size(v, 1), v);
         
+        subplot(2, 3, 3);
+        scatter(1:size(v, 1), v);
         idx_to_draw = v < draw_th;
-        subplot(2, 2, 2);
-
+        
+        subplot(2, 3, 2);
         patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
         hold on;
         patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceColor', 'green');
         hold on;
         scatter3(X.VERT(idx_to_draw,1), X.VERT(idx_to_draw,2), X.VERT(idx_to_draw,3), 'r', 'filled');
-        title('show patch    num of points: ' + num2str(sum(idx_to_draw)) + '/' + num2str(Y.n));
-        subplot(2, 2, 4);
+        title(['show patch    num of points: ', num2str(sum(idx_to_draw)), '/', num2str(Y.n)]);
+        
+        subplot(2, 3, 4);
         plot( 1 : size(diag(eigenvalue), 1), diag(eigenvalue), 'r');
         hold on;
         plot( 1 : size(laplace_Y.eigenvalue, 2), diag(laplace_Y.eigenvalue), 'b');
         legend('X', 'Y');
+        
+        subplot(2, 3, 5);
+        plot( 1 : size(diag(eigenvalue_LBO), 1), diag(eigenvalue_LBO), 'r');
+        hold on;
+        plot( 1 : size(LBO_Y.eigenvalue, 2), diag(LBO_Y.eigenvalue), 'b');
+        legend('X', 'Y');
         pause(0.001);
+
     end
     
     iter = iter + 1;
