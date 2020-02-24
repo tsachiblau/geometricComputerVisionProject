@@ -64,7 +64,7 @@ draw_th = 1e-3;
 eigenvalue_error_th = 1e-3;
 tau = 10 * laplace_Y.eigenvalue(end);
 v = ones(size(X.VERT, 1), 1) * tau * 100;
-% v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
+v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
 alpha = 1e-4;
 mu = diag(laplace_Y.eigenvalue);
 iter = 1;
@@ -73,20 +73,15 @@ error_list = [];
 f = figure();
 
 while eigenvalue_error > eigenvalue_error_th
-    ex1 = sparse(laplace_X.W + laplace_X.A * diag(v));
-    [eigenvectors, eigenvalue] = eigs(ex1 , laplace_X.A, number_of_eig, 'SM');
-    ex2 = eigenvectors .* eigenvectors;
-    ex3 = (diag(eigenvalue) - mu) ./ (mu .^ 2);
-    ex4 = 2 * alpha * ex2 * ex3;
-    
+   
     %gradient of the smooth part
-    ex5 = getVectorSmoother(v, X, alpha);
-    v = v - max(ex4, 0) -  ex5;
+    [v_update, eigenvalue] = updateV(v, laplace_X, mu, number_of_eig, alpha);
+    v = v - v_update;
     
     eigenvalue_error = norm(diag(eigenvalue) - mu);
     error_list = [error_list, eigenvalue_error];
     
-    if mod(iter, 100) == 0
+    if mod(iter, 2) == 0
         clf(f);
         subplot(2, 2, 1);
         plot(1:size(error_list, 2), error_list);
