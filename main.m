@@ -100,7 +100,7 @@ legend('X', 'Y');
 %% optimization 
 eigenvalue_error = 2;
 draw_th = 1e-3;
-eigenvalue_error_th = 1e-3;
+eigenvalue_error_th = 1e-2;
 tau = 10 * laplace_Y.eigenvalue(end);
 v = ones(size(X.VERT, 1), 1) * tau * 100;
 % v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;

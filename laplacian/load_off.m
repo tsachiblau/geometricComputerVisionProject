@@ -9,11 +9,9 @@ function shape = read_off(filename)
 shape = [];
 
 
-vertices = load([filename, '.vert']);
+vertices = load([filename, '.mat']);
 shape.n = size(vertices, 1);
 shape.indexes = [1:shape.n]';
-
-triangles = load([filename, '.tri']);
 shape.m = size(triangles, 1);
 
 shape.VERT = vertices;
