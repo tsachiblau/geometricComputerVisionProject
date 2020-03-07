@@ -105,10 +105,10 @@ tau = 10 * laplace_Y.eigenvalue(end);
 v_oracle = getOracleV(X, Y);
 v = v_oracle * tau * 100;
 rng(5);
-v(rand(size(v, 1), 1) < 0.1) = 1;
+v(rand(size(v, 1), 1) < 0.1) = 1 * tau * 100;
 
 % v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
-alpha = 1e-1;
+alpha = 1e-0;
 mu = diag(laplace_Y.eigenvalue);
 mu_LBO = diag(LBO_Y.eigenvalue);
 
@@ -116,6 +116,7 @@ iter = 1;
 error_list = [];
 error_list_LBO = [];
 alpha_list = [];
+TP_list = [];
 
 f = figure();
 
@@ -125,9 +126,9 @@ while eigenvalue_error > eigenvalue_error_th
     [v_update, eigenvalue] = updateV(v, laplace_X.W, laplace_X.A, mu, number_of_eig, alpha);
     [v_update_LBO, eigenvalue_LBO] = updateV(v, LBO_X.W, LBO_X.Q, mu_LBO, number_of_eig, alpha);
 
-%     v = max(v - v_update - v_update_LBO, 0);
+    v = max(v - v_update - v_update_LBO, 0);
 
-    v = max(v - v_update, 0);
+%     v = max(v - v_update, 0);
     
     eigenvalue_error = norm(diag(eigenvalue) - mu);
     eigenvalue_error_LBO = norm(diag(eigenvalue_LBO) - mu_LBO);
@@ -135,6 +136,7 @@ while eigenvalue_error > eigenvalue_error_th
     error_list = [error_list, eigenvalue_error];
     error_list_LBO = [error_list_LBO, eigenvalue_error_LBO];
     alpha_list = [alpha_list, alpha];
+    TP_list = [TP_list, sum((v < draw_th) & (v_oracle < draw_th))];
     
     if mod(iter, 5) == 0 & iter > 10
         clf(f);
@@ -150,6 +152,8 @@ while eigenvalue_error > eigenvalue_error_th
         subplot(2, 4, 3);
         scatter(1:size(v, 1), v);
         idx_to_draw = v < draw_th;
+        title('value of v');
+        
         subplot(2, 4, 4);
         patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
         hold on;
@@ -174,8 +178,14 @@ while eigenvalue_error > eigenvalue_error_th
         title('eigenvalue of LBO');       
         subplot(2, 4, 7);
         plot( 1 : size(alpha_list, 2), alpha_list);
-        pause(0.001);
         
+        subplot(2, 4, 8);
+        plot( 1 : size(TP_list, 2), TP_list, 'b');
+        hold on;
+        plot( 1 : size(TP_list, 2), ones(size(TP_list, 2),1) * Y.n, 'r');       
+        title('number of TP');
+        
+        pause(0.001);
         alpha = updateAlpha(error_list, alpha);
 
     end

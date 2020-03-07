@@ -10,14 +10,14 @@ function [alpha] = updateAlpha(error_list, alpha)
             ~all(getSub(error_list, size_of_samples, number_of_batch) <= 0)
         alpha = alpha / 4;
     
-    elseif mean_of_last > mean_of_last_last * 0.9
+    elseif mean_of_last >= mean_of_last_last
         alpha = alpha * 2;
     end
     
     if alpha > 2  
         alpha = 2;
-    elseif alpha < 1e-1
-        alpha = 1e-1
+    elseif alpha < 1e-2
+        alpha = 1e-2
     end
 end
 
