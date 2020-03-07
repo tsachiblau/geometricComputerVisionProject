@@ -98,20 +98,24 @@ legend('X', 'Y');
 
 %% optimization 
 eigenvalue_error = 2;
-draw_th = 1e-3;
-eigenvalue_error_th = 1e-2;
+draw_th = 0.1;
+eigenvalue_error_th = 1e-10;
 tau = 10 * laplace_Y.eigenvalue(end);
 % v = ones(size(X.VERT, 1), 1) * tau * 100;
-v = getOracleV(X, Y);
+v_oracle = getOracleV(X, Y);
+v = v_oracle;
+rng(5);
+v(rand(size(v, 1), 1) < 0.1) = 1;
 
 % v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
-alpha = 1e-3;
+alpha = 1e-2;
 mu = diag(laplace_Y.eigenvalue);
 mu_LBO = diag(LBO_Y.eigenvalue);
 
 iter = 1;
 error_list = [];
 error_list_LBO = [];
+alpha_list = [];
 
 f = figure();
 
@@ -121,50 +125,58 @@ while eigenvalue_error > eigenvalue_error_th
     [v_update, eigenvalue] = updateV(v, laplace_X.W, laplace_X.A, mu, number_of_eig, alpha);
     [v_update_LBO, eigenvalue_LBO] = updateV(v, LBO_X.W, LBO_X.Q, mu_LBO, number_of_eig, alpha);
 
-    v = v - v_update - v_update_LBO;
+%     v = max(v - v_update - v_update_LBO, 0);
+
+    v = max(v - v_update, 0);
+    
     eigenvalue_error = norm(diag(eigenvalue) - mu);
     eigenvalue_error_LBO = norm(diag(eigenvalue_LBO) - mu_LBO);
 
     error_list = [error_list, eigenvalue_error];
     error_list_LBO = [error_list_LBO, eigenvalue_error_LBO];
-
+    alpha_list = [alpha_list, alpha];
     
-    if mod(iter, 100) == 0
+    if mod(iter, 5) == 0 & iter > 10
         clf(f);
         
-        subplot(2, 3, 1);
+        subplot(2, 4, 1);
         plot(1:size(error_list, 2), error_list);
         title('eigenvalue norm error LB');
         
-        subplot(2, 3, 2);
+        subplot(2, 4, 2);
         plot(1:size(error_list_LBO, 2), error_list_LBO);
         title('eigenvalue norm error LBO');
         
-        subplot(2, 3, 3);
+        subplot(2, 4, 3);
         scatter(1:size(v, 1), v);
         idx_to_draw = v < draw_th;
-        subplot(2, 3, 4);
+        subplot(2, 4, 4);
         patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
         hold on;
         patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceColor', 'green');
         hold on;
         scatter3(X.VERT(idx_to_draw,1), X.VERT(idx_to_draw,2), X.VERT(idx_to_draw,3), 'r', 'filled');
-        title(['show patch    num of points: ', num2str(sum(idx_to_draw)), '/', num2str(Y.n)]);
+        title({['in the shape: ', num2str(sum(idx_to_draw & (v_oracle < draw_th))), '/', num2str(Y.n)],...
+                ['not in shape: ', num2str(sum(idx_to_draw & (v_oracle > draw_th)))]});
         
-        subplot(2, 3, 5);
+        subplot(2, 4, 5);
         plot( 1 : size(diag(eigenvalue), 1), diag(eigenvalue), 'r');
         hold on;
         plot( 1 : size(laplace_Y.eigenvalue, 2), diag(laplace_Y.eigenvalue), 'b');
         legend('X', 'Y');
         title('eigenvalue of LB');
         
-        subplot(2, 3, 6);
+        subplot(2, 4, 6);
         plot( 1 : size(diag(eigenvalue_LBO), 1), diag(eigenvalue_LBO), 'r');
         hold on;
         plot( 1 : size(LBO_Y.eigenvalue, 2), diag(LBO_Y.eigenvalue), 'b');
         legend('X', 'Y');
-        title('eigenvalue of LBO');
+        title('eigenvalue of LBO');       
+        subplot(2, 4, 7);
+        plot( 1 : size(alpha_list, 2), alpha_list);
         pause(0.001);
+        
+        alpha = updateAlpha(error_list, alpha);
 
     end
     
