@@ -6,17 +6,35 @@ function shape = read_off(filename)
 %   All the triangles are listed
 
 % dlmread starts from 0
+offset = 1;
 shape = [];
 
-
-vertices = load([filename, '.mat']);
-shape.n = size(vertices, 1);
+stats = dlmread(filename, ' ', [offset, 0, offset, 2]);
+shape.n = stats(1);
+shape.m = stats(2);
 shape.indexes = [1:shape.n]';
-shape.m = size(triangles, 1);
+
+offset = offset + 1;
+vertices = dlmread(filename, ' ', [offset, 0, offset + shape.n - 1, 2]);
+
+offset = offset + shape.n;
+triangles = dlmread(filename, ' ', [offset, 0, offset + shape.m - 1, 3]);
+
+% triangles(1);
+if triangles(1) ~= 3
+    error("read_off(): The mesh contains non-triangular faces")
+end
 
 shape.VERT = vertices;
-shape.TRIV = triangles;
+shape.TRIV = triangles(: , 2:end);
 
+% check if 0-index or 1-index
+zero_present = all(shape.TRIV, 'all');
+if zero_present == 0
+    shape.TRIV = shape.TRIV + 1;
+else
+    disp('The .off file is 1-indexed');
+end
 
 end
 

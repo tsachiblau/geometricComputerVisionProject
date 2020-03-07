@@ -2,7 +2,7 @@ close all;
 clc; clear;
 addpath('laplacian\');
 %% load data
-file_path = './dataset/dog0';
+file_path = './dataset/shrec/null/dog.off';
 X = load_off(file_path);
 [laplace_X.W, ~, laplace_X.A] = calc_LB_FEM_bc(X, 'dirichlet');
 [LBO_X.W, ~, LBO_X.A, LBO_X.Q] = calc_LBO_FEM_bc(X, 'dirichlet');
@@ -10,10 +10,8 @@ X = load_off(file_path);
 
 %% cut part of the shape
 
-
-num_of_polygons = 1000;
-seed = 503;
-Y = getPartialShape(X, num_of_polygons, seed);
+file_path = './dataset/shrec/cuts/cuts_dog_shape_1.off';
+Y = load_off(file_path);
 [laplace_Y.W, ~, laplace_Y.A] = calc_LB_FEM_bc(Y, 'dirichlet');
 [LBO_Y.W, ~, LBO_Y.A, LBO_Y.Q] = calc_LBO_FEM_bc(Y, 'dirichlet');
 
@@ -88,6 +86,7 @@ for row = 1 : 2
         i = i + 1;
     end 
 end
+ 
 
 
 %% show eigenvalue graph
@@ -102,7 +101,9 @@ eigenvalue_error = 2;
 draw_th = 1e-3;
 eigenvalue_error_th = 1e-2;
 tau = 10 * laplace_Y.eigenvalue(end);
-v = ones(size(X.VERT, 1), 1) * tau * 100;
+% v = ones(size(X.VERT, 1), 1) * tau * 100;
+v = getOracleV(X, Y);
+
 % v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
 alpha = 1e-3;
 mu = diag(laplace_Y.eigenvalue);
