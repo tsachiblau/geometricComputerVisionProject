@@ -7,15 +7,17 @@ function [alpha] = updateAlpha(error_list, alpha)
 
     % if the last mean of sub is smaller its better
     if error_list(end) > error_list(end-number_of_batch) |...
-            ~all(getSub(error_list, size_of_samples, number_of_batch) < 0)
+            ~all(getSub(error_list, size_of_samples, number_of_batch) <= 0)
         alpha = alpha / 4;
     
     elseif mean_of_last > mean_of_last_last * 0.9
         alpha = alpha * 2;
     end
     
-    if alpha > 1  
-        alpha = 1;
+    if alpha > 2  
+        alpha = 2;
+    elseif alpha < 1e-1
+        alpha = 1e-1
     end
 end
 

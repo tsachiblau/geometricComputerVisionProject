@@ -103,12 +103,12 @@ eigenvalue_error_th = 1e-10;
 tau = 10 * laplace_Y.eigenvalue(end);
 % v = ones(size(X.VERT, 1), 1) * tau * 100;
 v_oracle = getOracleV(X, Y);
-v = v_oracle;
+v = v_oracle * tau * 100;
 rng(5);
 v(rand(size(v, 1), 1) < 0.1) = 1;
 
 % v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
-alpha = 1e-2;
+alpha = 1e-1;
 mu = diag(laplace_Y.eigenvalue);
 mu_LBO = diag(LBO_Y.eigenvalue);
 
