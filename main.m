@@ -103,9 +103,11 @@ eigenvalue_error_th = 1e-10;
 tau = 10 * laplace_Y.eigenvalue(end);
 % v = ones(size(X.VERT, 1), 1) * tau * 100;
 v_oracle = getOracleV(X, Y);
+random_v = getRandomV(X)';
 v = v_oracle * tau * 100;
+v = random_v * tau * 100;
 rng(5);
-v(rand(size(v, 1), 1) < 0.1) = 1 * tau * 100;
+% v(rand(size(v, 1), 1) < 0.1) = 1 * tau * 100;
 
 % v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
 alpha = 1e-0;
