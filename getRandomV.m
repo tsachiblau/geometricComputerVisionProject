@@ -55,17 +55,17 @@ function [random_v] = getRandomV(X)
         random_v = [random_v; tmp_v];
     end
     
-    f = figure();
-    for i = 1 : size(random_v, 1)
-        clf(f);
-        plot_th = 0.3;
-        tmp_row = i;
-        patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
-        hold on;
-        scatter3(X.VERT(find(random_v(tmp_row, :) < plot_th),1), X.VERT(find(random_v(tmp_row, :) < plot_th),2), X.VERT(find(random_v(tmp_row, :) < plot_th),3), 30, 'r', 'filled');
-        title(num2str(i));
-        pause(1);
-    end
+%     f = figure();
+%     for i = 1 : size(random_v, 1)
+%         clf(f);
+%         plot_th = 0.3;
+%         tmp_row = i;
+%         patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
+%         hold on;
+%         scatter3(X.VERT(find(random_v(tmp_row, :) < plot_th),1), X.VERT(find(random_v(tmp_row, :) < plot_th),2), X.VERT(find(random_v(tmp_row, :) < plot_th),3), 30, 'r', 'filled');
+%         title(num2str(i));
+%         pause(1);
+%     end
     random_v = random_v(1, :);
 end
 

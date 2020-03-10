@@ -113,9 +113,9 @@ min_error = 100;
 for i = 1 : size(random_v, 2)
     tmp_random_v = random_v(:, i);
     v = tmp_random_v * tau * 100;
-    v = v_oracle * tau * 100;
+%     v = v_oracle * tau * 100;
     % v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
-    alpha = 1;
+    alpha = 1e-4;
     mu = diag(laplace_Y.eigenvalue);
     mu_LBO = diag(LBO_Y.eigenvalue);
 
@@ -126,14 +126,15 @@ for i = 1 : size(random_v, 2)
     TP_list = [];
 
     f = figure();
-
-    while eigenvalue_error > eigenvalue_error_th & iter < 300
+    v_initial = v;
+    while eigenvalue_error > eigenvalue_error_th & iter < 300000
 
         %gradient of the smooth part
         [v_update, eigenvalue] = updateV(v, laplace_X.W, laplace_X.A, mu, number_of_eig, alpha);
         [v_update_LBO, eigenvalue_LBO] = updateV(v, LBO_X.W, LBO_X.Q, mu_LBO, number_of_eig, alpha);
 
         v = max(v - v_update - v_update_LBO, 0);
+        v = min(v, tau * 100);
 
     %     v = max(v - v_update, 0);
 
@@ -157,7 +158,9 @@ for i = 1 : size(random_v, 2)
             title('eigenvalue norm error LBO');
 
             subplot(2, 4, 3);
-            scatter(1:size(v, 1), v);
+            scatter(1:size(v, 1), v, 'b');
+            hold on;
+            scatter(1:size(v, 1), v_initial, 'r');
             idx_to_draw = v < draw_th;
             title('value of v');
 
