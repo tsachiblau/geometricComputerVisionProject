@@ -98,7 +98,6 @@ legend('X', 'Y');
 
 %% optimization 
 eigenvalue_error = 2;
-draw_th = 0.1;
 eigenvalue_error_th = 1e-10;
 tau = 10 * laplace_Y.eigenvalue(end);
 % v = ones(size(X.VERT, 1), 1) * tau * 100;
@@ -106,95 +105,113 @@ v_oracle = getOracleV(X, Y);
 random_v = getRandomV(X)';
 v = v_oracle * tau * 100;
 v = random_v * tau * 100;
+draw_th = tau / 100;
+
 rng(5);
 % v(rand(size(v, 1), 1) < 0.1) = 1 * tau * 100;
+min_error = 100;
+for i = 1 : size(random_v, 2)
+    tmp_random_v = random_v(:, i);
+    v = tmp_random_v * tau * 100;
+    v = v_oracle * tau * 100;
+    % v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
+    alpha = 1;
+    mu = diag(laplace_Y.eigenvalue);
+    mu_LBO = diag(LBO_Y.eigenvalue);
 
-% v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
-alpha = 1e-0;
-mu = diag(laplace_Y.eigenvalue);
-mu_LBO = diag(LBO_Y.eigenvalue);
+    iter = 1;
+    error_list = [];
+    error_list_LBO = [];
+    alpha_list = [];
+    TP_list = [];
 
-iter = 1;
-error_list = [];
-error_list_LBO = [];
-alpha_list = [];
-TP_list = [];
+    f = figure();
 
-f = figure();
+    while eigenvalue_error > eigenvalue_error_th & iter < 300
 
-while eigenvalue_error > eigenvalue_error_th
-   
-    %gradient of the smooth part
-    [v_update, eigenvalue] = updateV(v, laplace_X.W, laplace_X.A, mu, number_of_eig, alpha);
-    [v_update_LBO, eigenvalue_LBO] = updateV(v, LBO_X.W, LBO_X.Q, mu_LBO, number_of_eig, alpha);
+        %gradient of the smooth part
+        [v_update, eigenvalue] = updateV(v, laplace_X.W, laplace_X.A, mu, number_of_eig, alpha);
+        [v_update_LBO, eigenvalue_LBO] = updateV(v, LBO_X.W, LBO_X.Q, mu_LBO, number_of_eig, alpha);
 
-    v = max(v - v_update - v_update_LBO, 0);
+        v = max(v - v_update - v_update_LBO, 0);
 
-%     v = max(v - v_update, 0);
-    
-    eigenvalue_error = norm(diag(eigenvalue) - mu);
-    eigenvalue_error_LBO = norm(diag(eigenvalue_LBO) - mu_LBO);
+    %     v = max(v - v_update, 0);
 
-    error_list = [error_list, eigenvalue_error];
-    error_list_LBO = [error_list_LBO, eigenvalue_error_LBO];
-    alpha_list = [alpha_list, alpha];
-    TP_list = [TP_list, sum((v < draw_th) & (v_oracle < draw_th))];
-    
-    if mod(iter, 5) == 0 & iter > 10
-        clf(f);
-        
-        subplot(2, 4, 1);
-        plot(1:size(error_list, 2), error_list);
-        title('eigenvalue norm error LB');
-        
-        subplot(2, 4, 2);
-        plot(1:size(error_list_LBO, 2), error_list_LBO);
-        title('eigenvalue norm error LBO');
-        
-        subplot(2, 4, 3);
-        scatter(1:size(v, 1), v);
-        idx_to_draw = v < draw_th;
-        title('value of v');
-        
-        subplot(2, 4, 4);
-        patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
-        hold on;
-        patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceColor', 'green');
-        hold on;
-        scatter3(X.VERT(idx_to_draw,1), X.VERT(idx_to_draw,2), X.VERT(idx_to_draw,3), 'r', 'filled');
-        title({['in the shape: ', num2str(sum(idx_to_draw & (v_oracle < draw_th))), '/', num2str(Y.n)],...
-                ['not in shape: ', num2str(sum(idx_to_draw & (v_oracle > draw_th)))]});
-        
-        subplot(2, 4, 5);
-        plot( 1 : size(diag(eigenvalue), 1), diag(eigenvalue), 'r');
-        hold on;
-        plot( 1 : size(laplace_Y.eigenvalue, 2), diag(laplace_Y.eigenvalue), 'b');
-        legend('X', 'Y');
-        title('eigenvalue of LB');
-        
-        subplot(2, 4, 6);
-        plot( 1 : size(diag(eigenvalue_LBO), 1), diag(eigenvalue_LBO), 'r');
-        hold on;
-        plot( 1 : size(LBO_Y.eigenvalue, 2), diag(LBO_Y.eigenvalue), 'b');
-        legend('X', 'Y');
-        title('eigenvalue of LBO');       
-        subplot(2, 4, 7);
-        plot( 1 : size(alpha_list, 2), alpha_list);
-        
-        subplot(2, 4, 8);
-        plot( 1 : size(TP_list, 2), TP_list, 'b');
-        hold on;
-        plot( 1 : size(TP_list, 2), ones(size(TP_list, 2),1) * Y.n, 'r');       
-        title('number of TP');
-        
-        pause(0.001);
-        alpha = updateAlpha(error_list, alpha);
+        eigenvalue_error = norm(diag(eigenvalue) - mu);
+        eigenvalue_error_LBO = norm(diag(eigenvalue_LBO) - mu_LBO);
 
+        error_list = [error_list, eigenvalue_error];
+        error_list_LBO = [error_list_LBO, eigenvalue_error_LBO];
+        alpha_list = [alpha_list, alpha];
+        TP_list = [TP_list, sum((v < draw_th) & (v_oracle < draw_th))];
+
+        if mod(iter, 5) == 0 & iter > 10
+            clf(f);
+
+            subplot(2, 4, 1);
+            plot(1:size(error_list, 2), error_list);
+            title('eigenvalue norm error LB');
+
+            subplot(2, 4, 2);
+            plot(1:size(error_list_LBO, 2), error_list_LBO);
+            title('eigenvalue norm error LBO');
+
+            subplot(2, 4, 3);
+            scatter(1:size(v, 1), v);
+            idx_to_draw = v < draw_th;
+            title('value of v');
+
+            subplot(2, 4, 4);
+            patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
+            hold on;
+            patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceColor', 'green');
+            hold on;
+            scatter3(X.VERT(idx_to_draw,1), X.VERT(idx_to_draw,2), X.VERT(idx_to_draw,3), 'r', 'filled');
+            title({['in the shape: ', num2str(sum(idx_to_draw & (v_oracle < draw_th))), '/', num2str(Y.n)],...
+                    ['not in shape: ', num2str(sum(idx_to_draw & (v_oracle > draw_th)))]});
+
+            subplot(2, 4, 5);
+            plot( 1 : size(diag(eigenvalue), 1), diag(eigenvalue), 'r');
+            hold on;
+            plot( 1 : size(laplace_Y.eigenvalue, 2), diag(laplace_Y.eigenvalue), 'b');
+            legend('X', 'Y');
+            title('eigenvalue of LB');
+
+            subplot(2, 4, 6);
+            plot( 1 : size(diag(eigenvalue_LBO), 1), diag(eigenvalue_LBO), 'r');
+            hold on;
+            plot( 1 : size(LBO_Y.eigenvalue, 2), diag(LBO_Y.eigenvalue), 'b');
+            legend('X', 'Y');
+            title('eigenvalue of LBO');       
+            subplot(2, 4, 7);
+            plot( 1 : size(alpha_list, 2), alpha_list);
+
+            subplot(2, 4, 8);
+            plot( 1 : size(TP_list, 2), TP_list, 'b');
+            hold on;
+            plot( 1 : size(TP_list, 2), ones(size(TP_list, 2),1) * Y.n, 'r');       
+            title('number of TP');
+
+            pause(0.001);
+            alpha = updateAlpha(error_list, alpha);
+        end
+
+        iter = iter + 1;
     end
-    
-    iter = iter + 1;
+
+    if eigenvalue_error < min_error
+        min_error = eigenvalue_error
+        best_v = v;
+    end
 end
 
+figure();
+idx_to_draw = best_v < draw_th;
+patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
+hold on;
+patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceColor', 'green');
+hold on;
+scatter3(X.VERT(idx_to_draw,1), X.VERT(idx_to_draw,2), X.VERT(idx_to_draw,3), 'r', 'filled');
 
 
 

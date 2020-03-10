@@ -9,7 +9,7 @@ function [distance_on_grapha, G] = calcGeodesicDistances(X)
         adgency_matrix(X.TRIV(i, 3), X.TRIV(i, 1)) = 1;
     end
     
-    adgency_matrix = ((adgency_matrix>0) & (adgency_matrix' > 0)) >= 1;
+    adgency_matrix = ((adgency_matrix>0) | (adgency_matrix' > 0)) >= 1;
     
     A(~adgency_matrix) = 0;
     %

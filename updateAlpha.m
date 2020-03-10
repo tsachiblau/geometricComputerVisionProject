@@ -14,10 +14,10 @@ function [alpha] = updateAlpha(error_list, alpha)
         alpha = alpha * 2;
     end
     
-    if alpha > 2  
-        alpha = 2;
-    elseif alpha < 1e-2
-        alpha = 1e-2
+    if alpha > 1e5 
+        alpha = 1e5;
+    elseif alpha < 1e1
+        alpha = 1e1
     end
 end
 
