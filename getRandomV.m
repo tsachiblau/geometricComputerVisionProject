@@ -66,6 +66,6 @@ function [random_v] = getRandomV(X)
 %         title(num2str(i));
 %         pause(1);
 %     end
-    random_v = random_v(1, :);
+%     random_v = random_v(1, :);
 end
 
