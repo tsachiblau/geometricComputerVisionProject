@@ -3,5 +3,8 @@
 *.xml
 *.iml
 *.npy
+*.off
+*.baryc_gt_sym
+*.baryc_gt
 ~$*
 __init__.py
