@@ -1,28 +1,30 @@
 close all;
 clc; clear;
 addpath('laplacian\');
+rng(5);
+
 %% load data
-file_path = './dataset/shrec/null/dog.off';
+shape_name = 'dog';
+% shape_name = 'centaur';
+file_path = ['./dataset/shrec/null/', shape_name, '.off'];
 X = load_off(file_path);
 [laplace_X.W, ~, laplace_X.A] = calc_LB_FEM_bc(X, 'dirichlet');
 [LBO_X.W, ~, LBO_X.A, LBO_X.Q] = calc_LBO_FEM_bc(X, 'dirichlet');
 
-
 %% cut part of the shape
-
-file_path = './dataset/shrec/cuts/cuts_dog_shape_1.off';
+file_path = ['./dataset/shrec/cuts/cuts_', shape_name, '_shape_1.off'];
 Y = load_off(file_path);
 [laplace_Y.W, ~, laplace_Y.A] = calc_LB_FEM_bc(Y, 'dirichlet');
 [LBO_Y.W, ~, LBO_Y.A, LBO_Y.Q] = calc_LBO_FEM_bc(Y, 'dirichlet');
 
 %% show obj
 figure();
-patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
+patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue', 'edgecolor', 'none');
 hold on;
-patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceColor', 'green');
+patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceColor', 'green', 'edgecolor', 'none');
 title('show patch');
-%% show eignevectors
 
+%% show eignevectors
 number_of_eig = 20;
 [laplace_X.eigenvectors, laplace_X.eigenvalue] = eigs(laplace_X.W, laplace_X.A, number_of_eig, 'SM');
 [laplace_Y.eigenvectors, laplace_Y.eigenvalue] = eigs(laplace_Y.W, laplace_Y.A, number_of_eig, 'SM');
@@ -31,38 +33,6 @@ number_of_eig = 20;
 [LBO_X.eigenvectors, LBO_X.eigenvalue] = eigs(LBO_X.W, LBO_X.Q, number_of_eig, 'SM');
 [LBO_Y.eigenvectors, LBO_Y.eigenvalue] = eigs(LBO_Y.W, LBO_Y.Q, number_of_eig, 'SM');
 
-% %% look at the features
-% 
-% L = inv(laplace_X.A) * laplace_X.W;
-% features = L * laplace_X.eigenvectors;
-% features(isnan(features)) = 0;
-% 
-% L2 = inv(LBO_X.A) * LBO_X.W;
-% features2 = L2 * LBO_X.eigenvectors;
-% features2(isnan(features2)) = 0;
-% 
-% feature_reduction = tsne(features);
-% feature_reduction_full = tsne([features, features2]);
-% 
-% figure();
-% subplot(1,2,1);
-% scatter(feature_reduction(:, 1), feature_reduction(:, 2));
-% hold on;
-% scatter(feature_reduction(Y.ORIGINAL_TRIV(:), 1), feature_reduction(Y.ORIGINAL_TRIV(:), 2), 'r');
-% title('first laplacian');
-% 
-% subplot(1,2,2);
-% scatter(feature_reduction_full(:, 1), feature_reduction_full(:, 2));
-% hold on;
-% scatter(feature_reduction_full(Y.ORIGINAL_TRIV(:), 1), feature_reduction_full(Y.ORIGINAL_TRIV(:), 2), 'r');
-% title('two laplacians');
-% 
-% 
-% y = zeros(3400, 1);
-% y(Y.ORIGINAL_TRIV(:)) = 1;
-% XXX = [features, y];
-% XXX_e = [features, features2, y];
-
 %% show eigenvalue on complete shape
 figure();
 i = 1;
@@ -70,26 +40,26 @@ for row = 1 : 2
     for col = 1 : 10
         subplot(2, 10, i);
         patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceVertexCData',laplace_X.eigenvectors(:,i),'EdgeAlpha', 0, 'FaceColor', 'interp');
-        title(['eigenvalue number', num2str(i) ,'   is', num2str(laplace_X.eigenvalue(i, i))]);
+        title(['eig #', num2str(i) ,': ', num2str(laplace_X.eigenvalue(i, i))]);
         i = i + 1;
     end 
 end
 
-%% show eigenvalue on complete shape
+%% show eigenvalue on partial shape
 figure();
 i = 1;
 for row = 1 : 2
     for col = 1 : 10
         subplot(2, 10, i);
+        
+        patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceVertexCData',laplace_X.eigenvectors(:,i),'EdgeAlpha', 0, 'FaceColor', 'none');
         patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceVertexCData',laplace_Y.eigenvectors(:,i),'EdgeAlpha', 0, 'FaceColor', 'interp');
-        title(['eigenvalue number', num2str(i) ,'   is', num2str(laplace_Y.eigenvalue(i, i))]);
+        title(['eig #', num2str(i) ,': ', num2str(laplace_X.eigenvalue(i, i))]);
         i = i + 1;
     end 
 end
- 
 
-
-%% show eigenvalue graph
+%% show eigenvalues of the partial and of the whole shape on a graph
 figure();
 plot( 1 : size(laplace_X.eigenvalue, 2), diag(laplace_X.eigenvalue), 'r');
 hold on;
@@ -97,55 +67,56 @@ plot( 1 : size(laplace_Y.eigenvalue, 2), diag(laplace_Y.eigenvalue), 'b');
 legend('X', 'Y');
 
 %% optimization 
+
+%set constants 
 eigenvalue_error = 2;
 eigenvalue_error_th = 1e-10;
 tau = 10 * laplace_Y.eigenvalue(end);
-% v = ones(size(X.VERT, 1), 1) * tau * 100;
-v_oracle = getOracleV(X, Y);
-random_v = getRandomV(X)';
-v = v_oracle * tau * 100;
-v = random_v * tau * 100;
 draw_th = tau / 100;
-
-rng(5);
-% v(rand(size(v, 1), 1) < 0.1) = 1 * tau * 100;
 min_error = 100;
+
+%get the oracle V
+v_oracle = getOracleV(X, Y);
+
+%get a group of not correlated, random v inititilizations
+random_v = getRandomV(X)';
+
+%this loop go over all the v random different initilizations
 for i = 1 : size(random_v, 2)
-    tmp_random_v = random_v(:, i);
-    v = tmp_random_v * tau * 100;
+    v = random_v(:, i) * tau * 100;
 %     v = v_oracle * tau * 100;
-    % v(sort(unique(Y.ORIGINAL_TRIV(:)))) = 0;
-    alpha = 1e-4;
+    
+    %prepare for the inner loop
     mu = diag(laplace_Y.eigenvalue);
     mu_LBO = diag(LBO_Y.eigenvalue);
-
+    alpha = 1e-4;
     iter = 1;
     error_list = [];
     error_list_LBO = [];
     alpha_list = [];
     TP_list = [];
-
     f = figure();
     v_initial = v;
+    
     while eigenvalue_error > eigenvalue_error_th & iter < 300000
 
         %gradient of the smooth part
         [v_update, eigenvalue] = updateV(v, laplace_X.W, laplace_X.A, mu, number_of_eig, alpha);
         [v_update_LBO, eigenvalue_LBO] = updateV(v, LBO_X.W, LBO_X.Q, mu_LBO, number_of_eig, alpha);
 
+        %keep v in the domain
         v = max(v - v_update - v_update_LBO, 0);
         v = min(v, tau * 100);
-
-    %     v = max(v - v_update, 0);
 
         eigenvalue_error = norm(diag(eigenvalue) - mu);
         eigenvalue_error_LBO = norm(diag(eigenvalue_LBO) - mu_LBO);
 
+        %update list for graphs
         error_list = [error_list, eigenvalue_error];
         error_list_LBO = [error_list_LBO, eigenvalue_error_LBO];
         alpha_list = [alpha_list, alpha];
         TP_list = [TP_list, sum((v < draw_th) & (v_oracle < draw_th))];
-
+        
         if mod(iter, 5) == 0 & iter > 10
             clf(f);
 
@@ -186,6 +157,7 @@ for i = 1 : size(random_v, 2)
             plot( 1 : size(LBO_Y.eigenvalue, 2), diag(LBO_Y.eigenvalue), 'b');
             legend('X', 'Y');
             title('eigenvalue of LBO');       
+            
             subplot(2, 4, 7);
             plot( 1 : size(alpha_list, 2), alpha_list);
 
@@ -208,6 +180,7 @@ for i = 1 : size(random_v, 2)
     end
 end
 
+%plot the best result
 figure();
 idx_to_draw = best_v < draw_th;
 patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
@@ -215,14 +188,3 @@ hold on;
 patch('Faces',Y.TRIV,'Vertices',Y.VERT, 'FaceColor', 'green');
 hold on;
 scatter3(X.VERT(idx_to_draw,1), X.VERT(idx_to_draw,2), X.VERT(idx_to_draw,3), 'r', 'filled');
-
-
-
-
-
-
-
-
-
-
-

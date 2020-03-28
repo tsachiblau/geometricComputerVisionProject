@@ -45,7 +45,7 @@ function [random_v] = getRandomV(X)
     scatter3(X.VERT(seeds(:),1), X.VERT(seeds(:),2), X.VERT(seeds(:),3), 300, 'r', 'filled');
     
     % build v for every seed
-    radius_of_v = max_distance / 10;
+    radius_of_v = max_distance / 4;
     random_v = [];
     
         
@@ -58,7 +58,7 @@ function [random_v] = getRandomV(X)
 %     f = figure();
 %     for i = 1 : size(random_v, 1)
 %         clf(f);
-%         plot_th = 0.3;
+%         plot_th = 0.9;
 %         tmp_row = i;
 %         patch('Faces',X.TRIV,'Vertices',X.VERT, 'FaceColor', 'blue');
 %         hold on;
@@ -66,6 +66,7 @@ function [random_v] = getRandomV(X)
 %         title(num2str(i));
 %         pause(1);
 %     end
+%     random_v = random_v(39, :);
 %     random_v = random_v(1, :);
 end
 
